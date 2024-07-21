@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Consultation extends Model{
-    public static String[] columns = {"id", "date", "objet", "note", "patientId", "doctorId"};
     Patient patient = null;
     Doctor doctor = null;
     ArrayList<Treatment> treatments;
@@ -85,7 +84,7 @@ public class Consultation extends Model{
         }
         treatments = new ArrayList<>();
         try {
-            ArrayList<Model> lsModels = this.hasMany("Treatment", "consultationId", "id", Treatment.columns);
+            ArrayList<Model> lsModels = this.hasMany("Treatment", "consultationId", "id", DatabaseInfo.Treatment.columns);
             for (Model model: lsModels){
                 Treatment treatment = new Treatment();
                 treatment.fill(model.properties);

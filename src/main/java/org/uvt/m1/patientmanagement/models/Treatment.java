@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Treatment extends Model{
-    public static String[] columns = {"id", "drug", "dose", "duration", "consultationId"};
     private Consultation consultation;
 
     public Treatment(){
@@ -56,7 +55,7 @@ public class Treatment extends Model{
             return consultation;
         }
         try {
-            Model model = this.hasOne("Consultation", "id", "consultationId", Consultation.columns);
+            Model model = this.hasOne("Consultation", "id", "consultationId", DatabaseInfo.Consultation.columns);
             consultation = new Consultation();
             consultation.fill(model.getProperties());
         } catch (SQLException e) {

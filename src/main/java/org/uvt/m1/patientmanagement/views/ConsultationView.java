@@ -2,14 +2,10 @@ package org.uvt.m1.patientmanagement.views;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import org.uvt.m1.patientmanagement.models.*;
@@ -17,14 +13,15 @@ import org.uvt.m1.patientmanagement.models.*;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class ConsultationView extends SplitPane {
 
-    private DatePicker date;
-    private TextField objet;
-    private ComboBox<Patient> patientComboBox;
-    private ComboBox<Doctor> doctorComboBox;
-    private TextArea note;
+    private final DatePicker date;
+    private final TextField objet;
+    private final ComboBox<Patient> patientComboBox;
+    private final ComboBox<Doctor> doctorComboBox;
+    private final TextArea note;
     private Label labelAddNew;
     private TreatmentView treatmentView;
 
@@ -42,8 +39,10 @@ public class ConsultationView extends SplitPane {
         date = new DatePicker(); date.setMinWidth(600);
         date.setPadding(new Insets(5, 10, 10, 5));
         objet = MainView.textField(600, "", "Objet de consultation");
-        patientComboBox = MainView.comboBox(600, "", "Patient");
-        doctorComboBox = MainView.comboBox(600, "", "Docteur");
+        patientComboBox = MainView.comboBox(600, "Patient");
+        doctorComboBox = MainView.comboBox(600, "Docteur");
+        patientComboBox.setConverter(Patient.stringConverter);
+        doctorComboBox.setConverter(Doctor.stringConverter);
         note = new TextArea();
         note.setWrapText(true);
 
@@ -53,35 +52,17 @@ public class ConsultationView extends SplitPane {
     }
 
     private void createContextMenu(){
-        this.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
-            @Override
-            public void handle(ContextMenuEvent contextMenuEvent) {
-                ContextMenu contextMenu = new ContextMenu();
-                MenuItem refreshItem = new MenuItem("Actualiser");
-                MenuItem addNew = new MenuItem("Ajouter un nouveau");
-                MenuItem reset = new MenuItem("Reset");
-                contextMenu.getItems().addAll(refreshItem, addNew, reset);
-                contextMenu.show(getScene().getWindow());
+        this.setOnContextMenuRequested(contextMenuEvent -> {
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem refreshItem = new MenuItem("Actualiser");
+            MenuItem addNew = new MenuItem("Ajouter un nouveau");
+            MenuItem reset = new MenuItem("Reset");
+            contextMenu.getItems().addAll(refreshItem, addNew, reset);
+            contextMenu.show(getScene().getWindow());
 
-                refreshItem.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        refresh();
-                    }
-                });
-                addNew.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        clearInput();
-                    }
-                });
-                reset.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        clearInput();
-                    }
-                });
-            }
+            refreshItem.setOnAction(actionEvent -> refresh());
+            addNew.setOnAction(actionEvent -> clearInput());
+            reset.setOnAction(actionEvent -> clearInput());
         });
     }
 
@@ -123,29 +104,21 @@ public class ConsultationView extends SplitPane {
         this.getItems().add(vBox);
         setMinWidth(500);
 
-        tableView.getSelectionModel().getSelectedItems().addListener(new ListChangeListener<Consultation>() {
-            @Override
-            public void onChanged(Change<? extends Consultation> change) {
-                if(change.getList().isEmpty()){
-                    return;
-                }
-                Consultation consultation = change.getList().get(0);
-
-                setCurrentSelected(consultation);
-                labelAddNew.setText("Information de la consultation");
-
-                editVew.setVisible(true);
-                btnAdd.setText("Modifier");
-                btnDelete.setVisible(true);
+        tableView.getSelectionModel().getSelectedItems().addListener((ListChangeListener<Consultation>) change -> {
+            if(change.getList().isEmpty()){
+                return;
             }
+            Consultation consultation = change.getList().get(0);
+
+            setCurrentSelected(consultation);
+            labelAddNew.setText("Information de la consultation");
+
+            editVew.setVisible(true);
+            btnAdd.setText("Modifier");
+            btnDelete.setVisible(true);
         });
 
-        btnSearch.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                search();
-            }
-        });
+        btnSearch.setOnAction(actionEvent -> search());
     }
     protected void createEditView(){
         labelAddNew = new Label("Add new consultation");
@@ -194,36 +167,23 @@ public class ConsultationView extends SplitPane {
         scrollPane.setContent(editVew);
         getItems().add(scrollPane);
 
-        btnAdd.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                saveCurrent();
-            }
-        });
-        btnClear.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                clearInput();
-            }
-        });
-        btnDelete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                try {
-                    currentSelected.delete();
-                    ObservableList<Consultation> consultations = tableView.getItems();
-                    for (Consultation consultation: consultations){
-                        if (currentSelected.getId().equals(consultation.getId())){
-                            boolean result = tableView.getItems().remove(consultation);
-                            System.out.println("On remove item: " + currentSelected.getId());
-                            clearInput();
-                            tableView.refresh();
-                            break;
-                        }
+        btnAdd.setOnAction(actionEvent -> saveCurrent());
+        btnClear.setOnAction(actionEvent -> clearInput());
+        btnDelete.setOnAction(actionEvent -> {
+            try {
+                currentSelected.delete();
+                ObservableList<Consultation> consultations = tableView.getItems();
+                for (Consultation consultation: consultations){
+                    if (currentSelected.getId().equals(consultation.getId())){
+                        tableView.getItems().remove(consultation);
+                        System.out.println("On remove item: " + currentSelected.getId());
+                        clearInput();
+                        tableView.refresh();
+                        break;
                     }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         });
     }
@@ -231,7 +191,7 @@ public class ConsultationView extends SplitPane {
     public void refresh(){
         try {
             Model.initConnection();
-            ArrayList<Model> lsModel =  Model.all("Consultation", Consultation.columns, "");
+            ArrayList<Model> lsModel =  Model.all("Consultation", DatabaseInfo.Consultation.columns, "");
             if (!tableView.getItems().isEmpty()){
                 tableView.getItems().clear();
             }
@@ -259,7 +219,7 @@ public class ConsultationView extends SplitPane {
     public void search(){
         try {
             Model.initConnection();
-            ArrayList<Model> lsModel =  Model.search("Consultation", searchField.getText(), Consultation.columns);
+            ArrayList<Model> lsModel =  Model.search("Consultation", searchField.getText(), DatabaseInfo.Consultation.columns);
             if (!tableView.getItems().isEmpty()){
                 tableView.getItems().clear();
             }
@@ -272,14 +232,6 @@ public class ConsultationView extends SplitPane {
         catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public Node getEditVew() {
-        return editVew;
-    }
-
-    public Consultation getCurrentSelected() {
-        return currentSelected;
     }
 
     public void setCurrentSelected(Consultation consultation) {
@@ -325,7 +277,7 @@ public class ConsultationView extends SplitPane {
         if(isUpdate){
             ObservableList<Consultation> items = tableView.getItems();
             for (Consultation item : items) {
-                if (item.getId() == currentSelected.getId()) {
+                if (Objects.equals(item.getId(), currentSelected.getId())) {
                     item.fill(currentSelected.getProperties());
                     break;
                 }

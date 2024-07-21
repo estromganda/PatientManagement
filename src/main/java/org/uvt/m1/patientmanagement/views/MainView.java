@@ -1,8 +1,6 @@
 package org.uvt.m1.patientmanagement.views;
 
 import javafx.collections.ListChangeListener;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -54,119 +52,74 @@ public class MainView extends BorderPane {
         admission.getItems().add(new MenuItem("Add new"));
         admission.getItems().add(new MenuItem("Refresh"));
 
-        admission.getItems().get(0).setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != admissionView){
-                    setCenter(admissionView);
-                }
+        admission.getItems().get(0).setOnAction(actionEvent -> {
+            if(getCenter() != admissionView){
+                setCenter(admissionView);
             }
         });
-        admission.getItems().get(1).setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != admissionView){
-                    setCenter(admissionView);
-                }
-                admissionView.clearInput();
+        admission.getItems().get(1).setOnAction(actionEvent -> {
+            if(getCenter() != admissionView){
+                setCenter(admissionView);
             }
+            admissionView.clearInput();
         });
-        admission.getItems().get(2).setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != admissionView){
-                    setCenter(admissionView);
-                }
-                admissionView.refresh();
+        admission.getItems().get(2).setOnAction(actionEvent -> {
+            if(getCenter() != admissionView){
+                setCenter(admissionView);
             }
+            admissionView.refresh();
         });
 
         Menu consultation = new Menu("Consultation");
         consultation.getItems().add(new MenuItem("All Consultation"));
         consultation.getItems().add(new MenuItem("Add new"));
         consultation.getItems().add(new MenuItem("Refresh"));
-        consultation.getItems().get(0).setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != consultationView){
-                    setCenter(consultationView);
-                }
+        consultation.getItems().get(0).setOnAction(actionEvent -> {
+            if(getCenter() != consultationView){
+                setCenter(consultationView);
             }
         });
-        consultation.getItems().get(1).setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != consultationView){
-                    setCenter(consultationView);
-                }
-                consultationView.clearInput();
+        consultation.getItems().get(1).setOnAction(actionEvent -> {
+            if(getCenter() != consultationView){
+                setCenter(consultationView);
             }
+            consultationView.clearInput();
         });
-        consultation.getItems().get(2).setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != consultationView){
-                    setCenter(consultationView);
-                }
-                consultationView.refresh();
+        consultation.getItems().get(2).setOnAction(actionEvent -> {
+            if(getCenter() != consultationView){
+                setCenter(consultationView);
             }
+            consultationView.refresh();
         });
 
         menuBar.getMenus().addAll(file, doctor, patient, admission, consultation);
         this.setTop(menuBar);
 
-        menuItemClose.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                primaryStage.close();
-            }
-        });
+        menuItemClose.setOnAction(actionEvent -> primaryStage.close());
 
-        allPatient.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != patientView){
-                    setCenter(patientView);
-                }
+        allPatient.setOnAction(actionEvent -> {
+            if(getCenter() != patientView){
+                setCenter(patientView);
             }
         });
-        refreshPatient.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                patientView.refresh();
+        refreshPatient.setOnAction(actionEvent -> patientView.refresh());
+        refreshDoctor.setOnAction(actionEvent -> doctorView.refresh());
+        allDoctor.setOnAction(actionEvent -> {
+            if(getCenter() != doctorView){
+                setCenter(doctorView);
             }
         });
-        refreshDoctor.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                doctorView.refresh();
+        addDoctor.setOnAction(actionEvent -> {
+            if(getCenter() != doctorView){
+                setCenter(doctorView);
             }
+            doctorView.clearInput();
         });
-        allDoctor.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != doctorView){
-                    setCenter(doctorView);
-                }
+        addPatient.setOnAction(actionEvent -> {
+            if(getCenter() != patientView){
+                setCenter(patientView);
             }
-        });
-        addDoctor.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != doctorView){
-                    setCenter(doctorView);
-                }
-                doctorView.clearInput();
-            }
-        });
-        addPatient.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(getCenter() != patientView){
-                    setCenter(patientView);
-                }
-                patientView.clearInput();
-            }
+            patientView.clearInput();
         });
     }
 
@@ -179,12 +132,7 @@ public class MainView extends BorderPane {
         listActionView.setScaleZ(2);
         listActionView.setStyle("-fx-font-size: 16px;");
 
-        listActionView.getItems().addListener(new ListChangeListener<String>() {
-            @Override
-            public void onChanged(Change<? extends String> change) {
-                System.out.println(change);
-            }
-        });
+        listActionView.getItems().addListener((ListChangeListener<String>) System.out::println);
         setLeft(listActionView);
     }
 
@@ -196,8 +144,8 @@ public class MainView extends BorderPane {
         return textField;
     }
 
-    public static <T> ComboBox comboBox(double minWidth, String text, String placeholder){
-        ComboBox comboBox = new ComboBox<T>();
+    public static <T> ComboBox<T> comboBox(double minWidth, String placeholder){
+        ComboBox<T> comboBox = new ComboBox<>();
         comboBox.setMinWidth(minWidth);
         comboBox.setPadding(new Insets(5, 10, 10, 5));
         comboBox.setPromptText(placeholder);

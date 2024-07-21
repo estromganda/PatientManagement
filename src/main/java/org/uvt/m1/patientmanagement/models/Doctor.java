@@ -1,5 +1,7 @@
 package org.uvt.m1.patientmanagement.models;
 
+import javafx.util.StringConverter;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,9 +9,19 @@ import java.util.Map;
 
 public class Doctor extends Model{
     private static final ArrayList<Doctor> doctors = new ArrayList<>();
-    public static String[] columns = {"id", "firstName", "lastName", "address", "contact"};
     ArrayList<Consultation> consultations;
 
+    public static final StringConverter<Doctor> stringConverter = new StringConverter<>() {
+        @Override
+        public String toString(Doctor doctor) {
+            return doctor.getFirstName();
+        }
+
+        @Override
+        public Doctor fromString(String s) {
+            return null;
+        }
+    };
     public Doctor(){
         table = "Doctor";
         properties = new HashMap<>(Map.of());
@@ -84,7 +96,7 @@ public class Doctor extends Model{
 
     public static void loadDoctors(){
         try {
-            ArrayList<Model> models = Model.all("Doctor", Doctor.columns, "");
+            ArrayList<Model> models = Model.all("Doctor", DatabaseInfo.Doctor.columns, "");
             doctors.clear();
             for(Model model: models){
                 Doctor doctor = new Doctor();

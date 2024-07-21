@@ -2,12 +2,10 @@ package org.uvt.m1.patientmanagement.models;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Admission extends Model{
-    public static String[] columns = {"id", "patientId", "doctorId", "roomId", "arrivalDate", "exitDate", "report"};
     Patient patient;
     Doctor doctor;
     Room room;
@@ -115,7 +113,7 @@ public class Admission extends Model{
         if(room == null){
             room = new Room();
             try {
-                Model model = Model.find("Room", this.getRoomId(), Room.columns);
+                Model model = Model.find("Room", this.getRoomId(), DatabaseInfo.Room.columns);
                 room.fill(model.properties);
             } catch (SQLException e) {
                 throw new RuntimeException(e);

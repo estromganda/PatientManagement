@@ -2,8 +2,6 @@ package org.uvt.m1.patientmanagement.views;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -19,7 +17,7 @@ public class TreatmentView extends VBox {
 
     Treatment currentSelected = null;
     private Consultation consultation;
-    private TableView<Treatment> tableView;
+    private final TableView<Treatment> tableView;
     private VBox detailView;
     TextField drug;
     TextField dose;
@@ -86,48 +84,31 @@ public class TreatmentView extends VBox {
         buttonBox.getChildren().addAll(btnAdd, btnClear, btnDelete, btnHide);
         getChildren().add(buttonBox);
 
-        btnAdd.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                saveCurrent();
-            }
-        });
-        btnClear.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                clearInputs();
-            }
-        });
-        btnDelete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                try {
-                    currentSelected.delete();
-                    ObservableList<Treatment> items = tableView.getItems();
-                    for (Treatment item: items){
-                        if (currentSelected.getId().equals(item.getId())){
-                            tableView.getItems().remove(item);
-                            clearInputs();
-                            tableView.refresh();
-                            break;
-                        }
+        btnAdd.setOnAction(actionEvent -> saveCurrent());
+        btnClear.setOnAction(actionEvent -> clearInputs());
+        btnDelete.setOnAction(actionEvent -> {
+            try {
+                currentSelected.delete();
+                ObservableList<Treatment> items = tableView.getItems();
+                for (Treatment item: items){
+                    if (currentSelected.getId().equals(item.getId())){
+                        tableView.getItems().remove(item);
+                        clearInputs();
+                        tableView.refresh();
+                        break;
                     }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         });
-        btnHide.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(detailView.isVisible()){
-                    detailView.setVisible(false);
-                    btnHide.setText("Afficher les details");
-                }
-                else{
-                    detailView.setVisible(true);
-                    btnHide.setText("Masquer les details");
-                }
+        btnHide.setOnAction(actionEvent -> {
+            if (detailView.isVisible()) {
+                detailView.setVisible(false);
+                btnHide.setText("Afficher les details");
+            } else {
+                detailView.setVisible(true);
+                btnHide.setText("Masquer les details");
             }
         });
     }

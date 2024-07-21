@@ -2,14 +2,11 @@ package org.uvt.m1.patientmanagement.views;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import org.uvt.m1.patientmanagement.models.*;
@@ -17,6 +14,7 @@ import org.uvt.m1.patientmanagement.models.*;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class AdmissionView extends SplitPane {
 
@@ -37,9 +35,12 @@ public class AdmissionView extends SplitPane {
 
     private TableView<Admission> tableView;
     public AdmissionView(){
-        patientComboBox = MainView.comboBox(600, "", "Patient");
-        doctorComboBox = MainView.comboBox(600, "", "Docteur");
-        roomComboBox = MainView.comboBox(600, "", "Salle");
+        patientComboBox = MainView.comboBox(600, "Patient");
+        doctorComboBox = MainView.comboBox(600, "Docteur");
+        roomComboBox = MainView.comboBox(600, "Salle");
+        patientComboBox.setConverter(Patient.stringConverter);
+        doctorComboBox.setConverter(Doctor.stringConverter);
+        roomComboBox.setConverter(Room.stringConverter);
         arrivalDate = new DatePicker(); arrivalDate.setMinWidth(600);
         exitDate = new DatePicker(); exitDate.setMinWidth(600);
         exitDate.setPadding(new Insets(5, 10, 10, 5));
@@ -54,35 +55,17 @@ public class AdmissionView extends SplitPane {
     }
 
     private void createContextMenu(){
-        this.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
-            @Override
-            public void handle(ContextMenuEvent contextMenuEvent) {
-                ContextMenu contextMenu = new ContextMenu();
-                MenuItem refreshItem = new MenuItem("Actualiser");
-                MenuItem addNew = new MenuItem("Ajouter un nouveau");
-                MenuItem reset = new MenuItem("Reset");
-                contextMenu.getItems().addAll(refreshItem, addNew, reset);
-                contextMenu.show(getScene().getWindow());
+        this.setOnContextMenuRequested(contextMenuEvent -> {
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem refreshItem = new MenuItem("Actualiser");
+            MenuItem addNew = new MenuItem("Ajouter un nouveau");
+            MenuItem reset = new MenuItem("Reset");
+            contextMenu.getItems().addAll(refreshItem, addNew, reset);
+            contextMenu.show(getScene().getWindow());
 
-                refreshItem.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        refresh();
-                    }
-                });
-                addNew.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        clearInput();
-                    }
-                });
-                reset.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        clearInput();
-                    }
-                });
-            }
+            refreshItem.setOnAction(actionEvent -> refresh());
+            addNew.setOnAction(actionEvent -> clearInput());
+            reset.setOnAction(actionEvent -> clearInput());
         });
     }
 
@@ -124,29 +107,21 @@ public class AdmissionView extends SplitPane {
         this.getItems().add(vBox);
         setMinWidth(500);
 
-        tableView.getSelectionModel().getSelectedItems().addListener(new ListChangeListener<Admission>() {
-            @Override
-            public void onChanged(Change<? extends Admission> change) {
-                if(change.getList().isEmpty()){
-                    return;
-                }
-                Admission admission = change.getList().get(0);
-
-                setCurrentSelected(admission);
-                labelAddNew.setText("Information de l' admission");
-
-                editVew.setVisible(true);
-                btnAdd.setText("Modifier");
-                btnDelete.setVisible(true);
+        tableView.getSelectionModel().getSelectedItems().addListener((ListChangeListener<Admission>) change -> {
+            if(change.getList().isEmpty()){
+                return;
             }
+            Admission admission = change.getList().get(0);
+
+            setCurrentSelected(admission);
+            labelAddNew.setText("Information de l' admission");
+
+            editVew.setVisible(true);
+            btnAdd.setText("Modifier");
+            btnDelete.setVisible(true);
         });
 
-        btnSearch.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                search();
-            }
-        });
+        btnSearch.setOnAction(actionEvent -> search());
     }
     protected void createEditView(){
         labelAddNew = new Label("Add new admission");
@@ -195,36 +170,22 @@ public class AdmissionView extends SplitPane {
         scrollPane.setContent(editVew);
         getItems().add(scrollPane);
 
-        btnAdd.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                saveCurrent();
-            }
-        });
-        btnClear.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                clearInput();
-            }
-        });
-        btnDelete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                try {
-                    currentSelected.delete();
-                    ObservableList<Admission> admissions = tableView.getItems();
-                    for (Admission admission: admissions){
-                        if (currentSelected.getId().equals(admission.getId())){
-                            boolean result = tableView.getItems().remove(admission);
-                            System.out.println("On remove item: " + currentSelected.getId());
-                            clearInput();
-                            tableView.refresh();
-                            break;
-                        }
+        btnAdd.setOnAction(actionEvent -> saveCurrent());
+        btnClear.setOnAction(actionEvent -> clearInput());
+        btnDelete.setOnAction(actionEvent -> {
+            try {
+                currentSelected.delete();
+                ObservableList<Admission> admissions = tableView.getItems();
+                for (Admission admission: admissions){
+                    if (currentSelected.getId().equals(admission.getId())){
+                        tableView.getItems().remove(admission);
+                        clearInput();
+                        tableView.refresh();
+                        break;
                     }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         });
     }
@@ -235,7 +196,7 @@ public class AdmissionView extends SplitPane {
     public void refresh(){
         try {
             Model.initConnection();
-            ArrayList<Model> lsModel =  Model.all("Admission", Admission.columns, "");
+            ArrayList<Model> lsModel =  Model.all("Admission", DatabaseInfo.Admission.columns, "");
             if (!tableView.getItems().isEmpty()){
                 tableView.getItems().clear();
             }
@@ -249,7 +210,6 @@ public class AdmissionView extends SplitPane {
                 patientComboBox.getItems().clear();
             }
             patientComboBox.getItems().addAll(Patient.getPatients());
-
             Doctor.loadDoctors();
             if(!doctorComboBox.getItems().isEmpty()){
                 doctorComboBox.getItems().clear();
@@ -269,7 +229,7 @@ public class AdmissionView extends SplitPane {
     public void search(){
         try {
             Model.initConnection();
-            ArrayList<Model> lsModel =  Model.search("Admission", searchField.getText(), Admission.columns);
+            ArrayList<Model> lsModel =  Model.search("Admission", searchField.getText(), DatabaseInfo.Admission.columns);
             if (!tableView.getItems().isEmpty()){
                 tableView.getItems().clear();
             }
@@ -282,14 +242,6 @@ public class AdmissionView extends SplitPane {
         catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public Node getEditVew() {
-        return editVew;
-    }
-
-    public Admission getCurrentSelected() {
-        return currentSelected;
     }
 
     public void setCurrentSelected(Admission admission) {
@@ -332,7 +284,7 @@ public class AdmissionView extends SplitPane {
         if(isUpdate){
             ObservableList<Admission> items = tableView.getItems();
             for (Admission item : items) {
-                if (item.getId() == currentSelected.getId()) {
+                if (Objects.equals(item.getId(), currentSelected.getId())) {
                     item.fill(currentSelected.getProperties());
                     break;
                 }

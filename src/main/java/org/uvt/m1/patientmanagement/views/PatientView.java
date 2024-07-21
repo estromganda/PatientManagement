@@ -2,14 +2,11 @@ package org.uvt.m1.patientmanagement.views;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import org.uvt.m1.patientmanagement.models.*;
@@ -19,6 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class PatientView extends SplitPane {
 
@@ -30,7 +28,6 @@ public class PatientView extends SplitPane {
     protected Label labelAddNew;
 
     private Button btnAdd;
-    private Button btnClear;
     private Button btnDelete;
     Patient currentSelected = null;
 
@@ -61,35 +58,17 @@ public class PatientView extends SplitPane {
     }
 
     private void createContextMenu(){
-        this.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
-            @Override
-            public void handle(ContextMenuEvent contextMenuEvent) {
-                ContextMenu contextMenu = new ContextMenu();
-                MenuItem refreshItem = new MenuItem("Actualiser");
-                MenuItem addNew = new MenuItem("Ajouter un nouveau");
-                MenuItem reset = new MenuItem("Reset");
-                contextMenu.getItems().addAll(refreshItem, addNew, reset);
-                contextMenu.show(getScene().getWindow());
+        this.setOnContextMenuRequested(contextMenuEvent -> {
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem refreshItem = new MenuItem("Actualiser");
+            MenuItem addNew = new MenuItem("Ajouter un nouveau");
+            MenuItem reset = new MenuItem("Reset");
+            contextMenu.getItems().addAll(refreshItem, addNew, reset);
+            contextMenu.show(getScene().getWindow());
 
-                refreshItem.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        refresh();
-                    }
-                });
-                addNew.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        clearInput();
-                    }
-                });
-                reset.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        clearInput();
-                    }
-                });
-            }
+            refreshItem.setOnAction(actionEvent -> refresh());
+            addNew.setOnAction(actionEvent -> clearInput());
+            reset.setOnAction(actionEvent -> clearInput());
         });
     }
 
@@ -125,39 +104,31 @@ public class PatientView extends SplitPane {
         this.getItems().add(vBox);
         setMinWidth(500);
 
-        tableView.getSelectionModel().getSelectedItems().addListener(new ListChangeListener<Patient>() {
-            @Override
-            public void onChanged(Change<? extends Patient> change) {
-                if(change.getList().isEmpty()){
-                    return;
-                }
-                firstName.setText(change.getList().get(0).getFirstName());
-                lastName.setText(change.getList().get(0).getLastName());
-                address.setText(change.getList().get(0).getAddress());
-                contact.setText(change.getList().get(0).getContact());
-                setCurrentSelected(change.getList().get(0));
-                labelAddNew.setText("Information du patient");
-
-                editVew.setVisible(true);
-                btnAdd.setText("Modifier");
-                btnDelete.setVisible(true);
-                try {
-                    birthday.setValue(LocalDate.parse(change.getList().get(0).getBirthday()));
-                }catch (DateTimeParseException e){
-                    e.printStackTrace();
-                    birthday.setAccessibleText(change.getList().get(0).getBirthday());
-                }
-                showCurrentAdmission();
-                showCurrentConsultation();
+        tableView.getSelectionModel().getSelectedItems().addListener((ListChangeListener<Patient>) change -> {
+            if(change.getList().isEmpty()){
+                return;
             }
+            firstName.setText(change.getList().get(0).getFirstName());
+            lastName.setText(change.getList().get(0).getLastName());
+            address.setText(change.getList().get(0).getAddress());
+            contact.setText(change.getList().get(0).getContact());
+            setCurrentSelected(change.getList().get(0));
+            labelAddNew.setText("Information du patient");
+
+            editVew.setVisible(true);
+            btnAdd.setText("Modifier");
+            btnDelete.setVisible(true);
+            try {
+                birthday.setValue(LocalDate.parse(change.getList().get(0).getBirthday()));
+            }catch (DateTimeParseException e){
+                System.out.println(e.getMessage());
+                birthday.setAccessibleText(change.getList().get(0).getBirthday());
+            }
+            showCurrentAdmission();
+            showCurrentConsultation();
         });
 
-        btnSearch.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                search();
-            }
-        });
+        btnSearch.setOnAction(actionEvent -> search());
     }
     protected void createEditView(){
         labelAddNew = new Label("Add new patient");
@@ -178,7 +149,7 @@ public class PatientView extends SplitPane {
         gridPane.add(contact, 0, 9);
 
         btnAdd = new Button("Ajouter");
-        btnClear = new Button("Reset");
+        Button btnClear = new Button("Reset");
         btnDelete = new Button("Supprimer");
         btnDelete.setVisible(false);
         HBox buttonBox = new HBox();
@@ -207,36 +178,23 @@ public class PatientView extends SplitPane {
         scrollPane.setContent(editVew);
         getItems().add(scrollPane);
 
-        btnAdd.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                saveCurrent();
-            }
-        });
-        btnClear.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                clearInput();
-            }
-        });
-        btnDelete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                try {
-                    currentSelected.delete();
-                    ObservableList<Patient> patients = tableView.getItems();
-                    for (Patient patient: patients){
-                        if (currentSelected.getId().equals(patient.getId())){
-                            boolean result = tableView.getItems().remove(patient);
-                            System.out.println("On remove item: " + currentSelected.getId());
-                            clearInput();
-                            tableView.refresh();
-                            break;
-                        }
+        btnAdd.setOnAction(actionEvent -> saveCurrent());
+        btnClear.setOnAction(actionEvent -> clearInput());
+        btnDelete.setOnAction(actionEvent -> {
+            try {
+                currentSelected.delete();
+                ObservableList<Patient> patients = tableView.getItems();
+                for (Patient patient: patients){
+                    if (currentSelected.getId().equals(patient.getId())){
+                        tableView.getItems().remove(patient);
+                        System.out.println("On remove item: " + currentSelected.getId());
+                        clearInput();
+                        tableView.refresh();
+                        break;
                     }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         });
     }
@@ -247,7 +205,7 @@ public class PatientView extends SplitPane {
     public void refresh(){
         try {
             Model.initConnection();
-            ArrayList<Model> lsModel =  Model.all("Patient", Patient.columns, "");
+            ArrayList<Model> lsModel =  Model.all("Patient", DatabaseInfo.Patient.columns, "");
             if (!tableView.getItems().isEmpty()){
                 tableView.getItems().clear();
             }
@@ -265,7 +223,7 @@ public class PatientView extends SplitPane {
     public void search(){
         try {
             Model.initConnection();
-            ArrayList<Model> lsModel =  Model.search("Patient", searchField.getText(), Patient.columns);
+            ArrayList<Model> lsModel =  Model.search("Patient", searchField.getText(), DatabaseInfo.Patient.columns);
             if (!tableView.getItems().isEmpty()){
                 tableView.getItems().clear();
             }
@@ -279,14 +237,6 @@ public class PatientView extends SplitPane {
                 throw new RuntimeException(e);
             }
         }
-
-    public Node getEditVew() {
-        return editVew;
-    }
-
-    public Patient getCurrentSelected() {
-        return currentSelected;
-    }
 
     public void setCurrentSelected(Patient currentSelected) {
         this.currentSelected = currentSelected;
@@ -307,7 +257,7 @@ public class PatientView extends SplitPane {
         if(isUpdate){
             ObservableList<Patient> items = tableView.getItems();
             for (Patient item : items) {
-                if (item.getId() == currentSelected.getId()) {
+                if (Objects.equals(item.getId(), currentSelected.getId())) {
                     item.fill(currentSelected.getProperties());
                     break;
                 }
@@ -330,7 +280,7 @@ public class PatientView extends SplitPane {
         btnDelete.setVisible(false);
         btnAdd.setText("Ajouter");
 
-        if(admissionTableView.getItems().size() >0){
+        if(!admissionTableView.getItems().isEmpty()){
             admissionTableView.getItems().clear();
         }
         ObservableList<Node> observableList = consultationView.getChildren();
@@ -402,7 +352,6 @@ public class PatientView extends SplitPane {
             treatmentTableView.getItems().addAll(treatments);
 
             gridPane.getChildren().add(treatmentTableView);
-            //treatmentTableView.setMinWidth(500);
             consultationView.getChildren().add(gridPane);
         }
     }
