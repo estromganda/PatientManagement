@@ -58,11 +58,13 @@ public class ConsultationView extends SplitPane {
             MenuItem addNew = new MenuItem("Ajouter un nouveau");
             MenuItem reset = new MenuItem("Reset");
             contextMenu.getItems().addAll(refreshItem, addNew, reset);
-            contextMenu.show(getScene().getWindow());
 
             refreshItem.setOnAction(actionEvent -> refresh());
             addNew.setOnAction(actionEvent -> clearInput());
             reset.setOnAction(actionEvent -> clearInput());
+
+            contextMenu.show(getScene().getWindow());
+            contextMenuEvent.consume();
         });
     }
 

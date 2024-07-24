@@ -2,10 +2,10 @@ package org.uvt.m1.patientmanagement.views;
 
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.controlsfx.control.ListActionView;
 
 public class MainView extends BorderPane {
     protected PatientView patientView;
@@ -124,16 +124,36 @@ public class MainView extends BorderPane {
     }
 
     private void createSidebar(){
-        ListActionView<String> listActionView = new ListActionView<>();
-        listActionView.getItems().add("Patient");
-        listActionView.getItems().add("Doctor");
-        listActionView.getItems().add("Consultation");
+        ListView<String> listView = new ListView<>();
+        final String patientTxt = "Patient";
+        final String doctorTxt = "Doctor";
+        final String admissionTxt = "Admission";
+        final String consultationTxt = "Consultation";
+        listView.getItems().add(patientTxt);
+        listView.getItems().add(doctorTxt);
+        listView.getItems().add(consultationTxt);
+        listView.getItems().add(admissionTxt);
 
-        listActionView.setScaleZ(2);
-        listActionView.setStyle("-fx-font-size: 16px;");
+        listView.setScaleZ(2);
+        listView.setStyle("-fx-font-size: 16px;");
 
-        listActionView.getItems().addListener((ListChangeListener<String>) System.out::println);
-        setLeft(listActionView);
+        listView.getSelectionModel().getSelectedItems().addListener((ListChangeListener<String>) change -> {
+            if(change.getList().isEmpty()){return;}
+            String text = change.getList().get(0);
+            switch (text) {
+                case patientTxt -> setCurrentView(patientView);
+                case doctorTxt -> setCurrentView(doctorView);
+                case consultationTxt -> setCurrentView(consultationView);
+                case admissionTxt -> setCurrentView(admissionView);
+            }
+        });
+        setLeft(listView);
+    }
+
+    private void setCurrentView(Node node){
+        if(this.getCenter() != node){
+            setCenter(node);
+        }
     }
 
     public static TextField textField(double minWidth, String text, String placeholder){
